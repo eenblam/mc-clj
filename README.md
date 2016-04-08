@@ -12,7 +12,7 @@ A simple Clojure library for simulating Markov chains from a transition matrix.
 
 ;; Pick random starting state.
 ;; Returns vector of 5 states, representing n=4 transitions.
-(simulate-rand P)
+(simulate-rand P 4)
 
 ;; Random walk on the circle with 3 states:
 (simulate
