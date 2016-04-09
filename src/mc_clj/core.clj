@@ -1,64 +1,95 @@
 (ns mc-clj.core)
 
-(defn cumprob-base
-  "Basis for the cumprob closure."
-  [acc front back]
-  (let [new-acc (+ acc (if (empty? back) 0 (first back)))]
-    (if (empty? back)
-      front
-      (recur new-acc
-             (conj front
-                   ;; 0 if 0, new-acc otherwise
-                   (if (= acc new-acc)
-                     0
-                     new-acc))
-             (rest back)))))
-
 (defn cumprob
-  "Return a list providing the cumulative sums of positive probabilities in coll."
-  [coll]
-  (cumprob-base 0 [] coll))
+  "Return a vector providing the cumulative sums of positive probabilities in coll."
+  ([coll] (cumprob coll [] 0))
+  ([coll cum-probs acc]
+   (let [new-acc (+ acc (if (empty? coll) 0 (first coll)))]
+     (if (empty? coll)
+       cum-probs
+       (recur (rest coll)
+              (conj cum-probs
+                    ;; 0 if 0, new-acc otherwise
+                    (if (= acc new-acc)
+                      0
+                      new-acc))
+              new-acc)))))
+
+(defn make-partition
+  [P]
+  (vec (map cumprob P)))
+
+(defrecord MC [trans-matrix part-matrix init names])
+
+(defn normalize-row
+  "Normalize row vector to sum to unity."
+  [row]
+  (vec (map #(/ % (apply + row)) row)))
+
+(defn normalize-matrix
+  "Normalize each row of P to sum to unity."
+  [P]
+  (vec (map normalize-row P)))
+
+(defn- validate-transitions
+  [P]
+  (or (= (vec (map #(apply + %) P))
+         (take (count P) (repeat 1.0)))
+      (throw
+        (ex-info "At least one row does not sum to 1 in transition matrix."
+                 {:sums (vec (map #(apply + %) P))}))))
+
+(defn make-MC
+  "Create an MC record from a transition matrix, possibly with initial probabilities or state-names."
+  ([P]
+   (make-MC P
+            (vec (take (count P) (repeat (/ 1 (count P)))))
+            []))
+  ([P init]
+   (make-MC P init []))
+  ([P init names]
+   ;;(validate-transitions P)
+   (let [P-norm (normalize-matrix P)]
+     (->MC P-norm (make-partition P-norm) init names))))
 
 (defn accessible
   "Filters out inaccessible nodes from route mapping."
   [mapping]
   (into {} (filter #(> (second %) 0) mapping)))
 
-(defn next-state-base
-  "Basis for the next-state closure."
-  [p cumprobs index]
-  (if (<= p (first cumprobs))
-    index
-    (recur p (rest cumprobs) (inc index))))
-
-(defn next-state-of-sums
-  "Get next state from cumprobs collection."
-  [p cumprobs]
-  (next-state-base p cumprobs 0))
-
 (defn next-state
-  "Get next state from transition matrix row."
-  [row]
-  (next-state-of-sums (rand) (cumprob row)))
+  "Get next state from partition matrix row."
+  ([row] (next-state row (rand)))
+  ([row p] (next-state row p 0))
+  ([row p index]
+   (if (<= p (first row))
+     index
+     (recur (rest row) p (inc index)))))
 
 (defn trans
-  "Simulate a single transition from state i given transition matrix P."
-  [P i]
-  (next-state (get P i)))
+  "Simulate a single transition from state i given partition matrix M."
+  [M i]
+  (next-state (get M i)))
 
-(defn simulate-base
-  "Basis for simulate clojure."
-  [P i n coll]
-  (if (<= n 0)
-    (conj coll i)
-    (recur P (trans P i) (dec n) (conj coll i))))
+(defn simulate-m
+  "Simulate n transitions of Markov chain given by partition matrix M, beginning in state i."
+  ([M i n] (simulate-m M i n []))
+  ([M i n coll]
+    (if (<= n 0)
+      (conj coll i)
+      (recur M (trans M i) (dec n) (conj coll i)))))
 
-(defn simulate
-  "Simulate n transitions of Markov chain given by P, beginning in state i."
+(defn simulate-mc
+  "Simulate n transitions of Markov chain mc, beginning in state i."
+  [mc i n]
+  (simulate-m (:part-matrix mc) i n))
+
+(defn simulate-p
+  "Simulate n transitions of Markov chain specified by transition matrix P, beginning in state i."
   [P i n]
-  (simulate-base P i n []))
+  (simulate-m (make-partition P) i n))
 
 (defn simulate-rand
-  "Simulate n transitions of Markov chain given by P, beginning in a random state."
-  [P n]
-  (simulate P (rand-int (count P)) n))
+  "Simulate n transitions of Markov chain mc, beginning in a random state."
+  [mc n]
+  (simulate-mc mc (next-state (:init mc)) n))

@@ -22,13 +22,13 @@
       (is (= {:a 0.1, :c 0.9}
              (accessible {:a 0.1, :b 0, :c 0.9}))))))
 
-(deftest next-state-of-sums-test
-  (testing "next-state-of-sums"
+(deftest next-state-test
+  (testing "next-state"
     (testing "on its happy paths"
-      (is (= 1 (next-state-of-sums 0.5 [0.1 0.5 1.0]))
+      (is (= 1 (next-state [0.1 0.5 1.0] 0.5))
           "returns i when p <= i"))))
 
 (deftest simulate-test
   (testing "simulate"
     (testing "singleton class captures state"
-      (is (= [0 0 0 0] (simulate [[1 1] [0.1 0.9]] 0 3))))))
+      (is (= [0 0 0 0] (simulate-p [[1 0] [0.1 0.9]] 0 3))))))
