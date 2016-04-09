@@ -19,8 +19,6 @@
   [P]
   (vec (map cumprob P)))
 
-(defrecord MC [trans-matrix part-matrix init names])
-
 (defn normalize-row
   "Normalize row vector to sum to unity."
   [row]
@@ -31,13 +29,7 @@
   [P]
   (vec (map normalize-row P)))
 
-(defn- validate-transitions
-  [P]
-  (or (= (vec (map #(apply + %) P))
-         (take (count P) (repeat 1.0)))
-      (throw
-        (ex-info "At least one row does not sum to 1 in transition matrix."
-                 {:sums (vec (map #(apply + %) P))}))))
+(defrecord MC [trans-matrix part-matrix init names])
 
 (defn make-MC
   "Create an MC record from a transition matrix, possibly with initial probabilities or state-names."
@@ -48,7 +40,6 @@
   ([P init]
    (make-MC P init []))
   ([P init names]
-   ;;(validate-transitions P)
    (let [P-norm (normalize-matrix P)]
      (->MC P-norm (make-partition P-norm) init names))))
 
@@ -81,7 +72,7 @@
 
 (defn simulate-mc
   "Simulate n transitions of Markov chain mc, beginning in state i."
-  [mc i n]
+  [^MC mc i n]
   (simulate-m (:part-matrix mc) i n))
 
 (defn simulate-p
@@ -91,5 +82,5 @@
 
 (defn simulate-rand
   "Simulate n transitions of Markov chain mc, beginning in a random state."
-  [mc n]
+  [^MC mc n]
   (simulate-mc mc (next-state (:init mc)) n))

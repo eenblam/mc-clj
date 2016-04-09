@@ -6,19 +6,27 @@ A simple Clojure library for simulating Markov chains from a transition matrix.
 
 ```clojure
 (def P [[0.1 0 0.9] [0.4 0.2 0.4] [0 1 0]])
+(def mc (make-MC P))
 
 ;; Start at state 1. Returns vector of 4 states, representing n=3 transitions.
-(simulate P 1 3)
+(simulate-p P 1 3)
 
-;; Pick random starting state.
-;; Returns vector of 5 states, representing n=4 transitions.
-(simulate-rand P 4)
+;; Same, utilizing MC instead
+(simulate-mc mc 1 3)
+
+;; Create a new MC record with P(X0=0)=0.1 and P(X0=1)=0.9
+(def M [[0.5 0.5] [0.4 0.6]])
+(def M-mc M [0.1 0.9])
+
+;; Simulate 10 transitions of M-mc, randomly choosing initial state given [0.1 0.9].
+(simulate-rand M-mc 10)
+
+;; TODO: simulate-mc with labeled states.
 
 ;; Random walk on the circle with 3 states:
-(simulate
-  [[0 0.5 0.5] [0.5 0 0.5] [0.5 0.5 0]]
-  0
-  10)
+(simulate-p [[0 0.5 0.5] [0.5 0 0.5] [0.5 0.5 0]]
+            0
+            10)
 ```
 
 ## License
