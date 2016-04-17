@@ -50,7 +50,7 @@
 
 (defn next-state
   "Get next state from partition matrix row."
-  ([row] (next-state row (rand)))
+  ([row] (next-state row (rand) 0))
   ([row p] (next-state row p 0))
   ([row p index]
    (if (<= p (first row))

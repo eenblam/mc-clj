@@ -29,6 +29,17 @@ A simple Clojure library for simulating Markov chains from a transition matrix.
             10)
 ```
 
+Note that, even for the trivial case of a single state,
+it is always necessary to describe the transition matrix using nested arrays.
+
+```clojure
+;; Succeeds
+(simulate-p [[1]] 0 10)
+
+;; Fails
+(simulate-p [1] 0 10)
+```
+
 ## License
 
 Copyright © 2016 Ben Elam

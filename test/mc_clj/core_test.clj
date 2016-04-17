@@ -31,4 +31,7 @@
 (deftest simulate-test
   (testing "simulate"
     (testing "singleton class captures state"
-      (is (= [0 0 0 0] (simulate-p [[1 0] [0.1 0.9]] 0 3))))))
+      (is (= [0 0 0 0] (simulate-p [[1 0] [0.1 0.9]] 0 3))))
+    (testing "singleton matrix behaviour"
+      (is (= [0 0 0 0] (simulate-p [[1]] 0 3)))
+      (is (thrown? IllegalArgumentException (simulate-p [1] 0 3))))))
