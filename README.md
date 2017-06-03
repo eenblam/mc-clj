@@ -42,7 +42,5 @@ it is always necessary to describe the transition matrix using nested arrays.
 
 ## License
 
-Copyright © 2016 Ben Elam
-
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
